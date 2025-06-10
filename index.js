@@ -1,20 +1,32 @@
 const express = require('express');
 const { Sequelize, DataTypes } = require('sequelize');
+require('dotenv').config();
 const app = express();
 
 // Middleware for parsing JSON
 app.use(express.json());
 
-// Configure Sequelize with PostgreSQL connection
-const sequelize = new Sequelize('database', 'username', 'password', {
-    host: 'localhost',
+const DATABASE_URL = process.env.DATABASE_URL;
+
+if (!DATABASE_URL) {
+    console.error('Error: DATABASE_URL no está definida. Asegúrate de que esté en .env o en las variables de entorno de Render.');
+    process.exit(1); // Termina la aplicación si no hay conexión string
+}
+
+const sequelize = new Sequelize(DATABASE_URL, {
     dialect: 'postgres',
-    port: 5432,
-    logging: false
+    dialectOptions: {
+        ssl: {
+            require: true, // Asegura que SSL esté habilitado
+            rejectUnauthorized: false // Permite conexiones SSL sin verificar el certificado (útil para Render)
+        }
+    },
+    logging: console.log // Puedes cambiar a console.log para ver las queries SQL
 });
 
+
 // Define a sample model
-const User = sequelize.define('User', {
+const User = sequelize.define('user', {
     id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
